@@ -2,8 +2,6 @@ html5lib==0.999
 httplib2==0.8
 psycopg2==2.7.1
 pycrypto==2.6.1
-pyparsing==2.0.1
-python-apt==0.9.3.5ubuntu2
 python-dateutil==1.5
 pytz==2012c
 tabula-py==0.4.1
