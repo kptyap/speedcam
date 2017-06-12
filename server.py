@@ -1,10 +1,17 @@
-from os import environ
 from flask import Flask
-
+from datetime import datetime
 app = Flask(__name__)
-#app.run(host='0.0.0.0', port=8080)
-app.run(environ.get('PORT'))
 
-@app.route("/")
-def helloworld():
-    return 'Hello P'
+@app.route('/')
+def homepage():
+    the_time = datetime.now().strftime("%A, %d %b %Y %l:%M %p")
+
+    return """
+    <h1>This is but a page for heroku while the script runs in the background</h1>
+    <p>It is currently {time}.</p>
+
+    <img src="http://loremflickr.com/600/400">
+    """.format(time=the_time)
+
+if __name__ == '__main__':
+    app.run(debug=True, use_reloader=True)
