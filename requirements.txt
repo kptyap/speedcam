@@ -2,7 +2,6 @@ html5lib==0.999
 httplib2==0.8
 psycopg2==2.7.1
 pycrypto==2.6.1
-pytz==2012c
 urllib3==1.7.1
 Flask
 Jinja2==2.8.1
