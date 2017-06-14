@@ -72,7 +72,8 @@ def main():
     existing_date = cur.fetchall()
     print existing_date
     
-    csvfile = '/home/ubuntu/workspace/speedcam/KY.csv'
+    # csvfile = '/home/ubuntu/workspace/speedcam/KY.csv'
+    csvfile = "speedcam.csv"
     with open (csvfile, 'rb') as csvfile:
         rows = list(csv.reader(csvfile, delimiter=','))
         new_date = rows[0][0]
