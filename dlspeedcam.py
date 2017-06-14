@@ -30,15 +30,15 @@ def main():
     print url
     
     #urllib.urlretrieve(url[, filename[, reporthook[, data]]])
-    urllib.urlretrieve(url, 'speedcamDL.pdf')
+    urllib.urlretrieve(url, '/tmp/speedcamDL.pdf')
     
     #check if pdf downloaded by checking file size
-    filesize = os.path.getsize('speedcamDL.pdf')
+    filesize = os.path.getsize('/tmp/speedcamDL.pdf')
     
     #if pdf was downloaded correctly then convert info to csv
     if (filesize > 30000):
-        tabula.convert_into("speedcamDL.pdf",
-                                "speedcam.csv",
+        tabula.convert_into("/tmp/speedcamDL.pdf",
+                                "/tmp/speedcam.csv",
                                 pages="all",
                                 output_format="csv")
     else:
@@ -73,7 +73,7 @@ def main():
     print existing_date
     
     # csvfile = '/home/ubuntu/workspace/speedcam/KY.csv'
-    csvfile = "speedcam.csv"
+    csvfile = "/tmp/speedcam.csv"
     with open (csvfile, 'rb') as csvfile:
         rows = list(csv.reader(csvfile, delimiter=','))
         new_date = rows[0][0]
