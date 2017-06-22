@@ -23,22 +23,23 @@ def main():
     enddate1 = ed1.strftime('%d%m%Y')
     
     # Manually set the date here:
-    #startdate1 = '24042017'
-    #enddate1 = '30042017'
+    startdate1 = '12062017'
+    enddate1 = '18062017'
     
     url = 'https://www.police.wa.gov.au/~/media/Files/Police/Traffic/Cameras/Camera-locations/MediaLocations-'+startdate1+'-to-'+enddate1+'.pdf'
     print url
     
     #urllib.urlretrieve(url[, filename[, reporthook[, data]]])
-    urllib.urlretrieve(url, '/tmp/speedcamDL.pdf')
+    urllib.urlretrieve(url, 'speedcamDL.pdf')
     
     #check if pdf downloaded by checking file size
-    filesize = os.path.getsize('/tmp/speedcamDL.pdf')
+    filesize = os.path.getsize('speedcamDL.pdf')
+    print filesize
     
     #if pdf was downloaded correctly then convert info to csv
     if (filesize > 30000):
-        tabula.convert_into("/tmp/speedcamDL.pdf",
-                                "/tmp/speedcam.csv",
+        tabula.convert_into("speedcamDL.pdf",
+                                "speedcam.csv",
                                 pages="all",
                                 output_format="csv")
     else:
