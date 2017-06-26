@@ -14,22 +14,21 @@ enddate1 = '18062017'
 url = 'https://www.police.wa.gov.au/~/media/Files/Police/Traffic/Cameras/Camera-locations/MediaLocations-'+startdate1+'-to-'+enddate1+'.pdf'
 
 #urllib.urlretrieve(url[, filename[, reporthook[, data]]])
-with tempfile.NamedTemporaryFile() as temp:
-    urllib.urlretrieve(url, temp.name)
+urllib.urlretrieve(url, 'speedcamDL.pdf')
 
 #check if pdf downloaded by checking file size
-    filesize = os.path.getsize(temp.name)
-    print filesize
+filesize = os.path.getsize('speedcamDL.pdf')
+print filesize
 
 #if pdf was downloaded correctly then convert info to csv
-    if (filesize > 30000):
-        tabula.convert_into(temp.name,
-                                "speedcam.csv",
-                                pages="all",
-                                output_format="csv")
-    else:
-        print ('404 error')
-        sys.exit
+if (filesize > 30000):
+    tabula.convert_into('speedcamDL.pdf',
+                            'speedcam.csv',
+                            pages='all',
+                            output_format='csv')
+else:
+    print ('404 error')
+    sys.exit
 
 
 
