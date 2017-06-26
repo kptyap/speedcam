@@ -4,6 +4,7 @@ import sys
 import tabula
 import urllib
 import os
+import tempfile
 from datetime import datetime
 
 # Manually set the date here:
@@ -11,24 +12,24 @@ startdate1 = '12062017'
 enddate1 = '18062017'
 
 url = 'https://www.police.wa.gov.au/~/media/Files/Police/Traffic/Cameras/Camera-locations/MediaLocations-'+startdate1+'-to-'+enddate1+'.pdf'
-print url
 
 #urllib.urlretrieve(url[, filename[, reporthook[, data]]])
-urllib.urlretrieve(url, 'speedcamDL.pdf')
+with tempfile.NamedTemporaryFile() as temp:
+    urllib.urlretrieve(url, temp.name)
 
 #check if pdf downloaded by checking file size
-filesize = os.path.getsize('speedcamDL.pdf')
-print filesize
+    filesize = os.path.getsize(temp.name)
+    print filesize
 
 #if pdf was downloaded correctly then convert info to csv
-if (filesize > 30000):
-    tabula.convert_into("speedcamDL.pdf",
-                            "speedcam.csv",
-                            pages="all",
-                            output_format="csv")
-else:
-    print ('404 error')
-    sys.exit
+    if (filesize > 30000):
+        tabula.convert_into(temp.name,
+                                "speedcam.csv",
+                                pages="all",
+                                output_format="csv")
+    else:
+        print ('404 error')
+        sys.exit
 
 
 
