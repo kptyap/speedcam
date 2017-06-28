@@ -12,45 +12,46 @@ import psycopg2
 import sys
 import urlparse
 import tempfile
+import re
+from bs4 import BeautifulSoup
 
 def main():
-    #### Initialise time and download latest PDF from website ####
-    ####                                                      ####
+    #### Scrape and download latest PDF from website ####
+   
+    baseurl = "https://www.police.wa.gov.au"
+    url = 'https://www.police.wa.gov.au/Traffic/Cameras/Camera-locations'
+
+    # retrieve the html of the page
+    urllib.urlretrieve(url,'pol.html')
     
-    # set start date as the closest Monday prior, enddate as friday
-    d = datetime.datetime.today().weekday()
-    sd1 = datetime.date.today() - datetime.timedelta(days=d)
-    ed1 = sd1 + datetime.timedelta(days=6)
-    startdate1 = sd1.strftime('%d%m%Y')
-    enddate1 = ed1.strftime('%d%m%Y')
+    # open the html document in BS4
+    with open ('pol.html', 'r') as p:
+        soup = BeautifulSoup(p, 'html.parser')
+        
+        # search using BS4 for the first PDF link
+        pdfurl = soup.find(href=re.compile("/~/media/Files"))['href']
+        pdfurl = baseurl + str(pdfurl)
+        print(pdfurl)
     
-    # Manually set the date here:
-    startdate1 = '12062017'
-    enddate1 = '18062017'
+    # download latest PDF
+    urllib.urlretrieve(pdfurl, 'speedcamDL.pdf')
     
-    url = 'https://www.police.wa.gov.au/~/media/Files/Police/Traffic/Cameras/Camera-locations/MediaLocations-'+startdate1+'-to-'+enddate1+'.pdf'
-    print url
-    
-    #urllib.urlretrieve(url[, filename[, reporthook[, data]]])
-    with tempfile.NamedTemporaryFile() as temp:
-        urllib.urlretrieve(url, temp.name)
-    
-        #check if pdf downloaded by checking file size
-        filesize = os.path.getsize(temp.name)
-        print filesize
-    
-        #if pdf was downloaded correctly then convert info to csv
-        if (filesize > 30000):
-            tabula.convert_into(temp.name,
-                                    "speedcam.csv",
-                                    pages="all",
-                                    output_format="csv")
-        else:
-            print ('404 error')
-            sys.exit
+    #check if pdf downloaded by checking file size
+    filesize = os.path.getsize('speedcamDL.pdf')
+    print filesize
+
+    #if pdf was downloaded correctly then convert info to csv
+    if (filesize > 30000):
+        tabula.convert_into('speedcamDL.pdf',
+                                "speedcam.csv",
+                                pages="all",
+                                output_format="csv")
+    else:
+        print ('404 error')
+        sys.exit
     
     #### Take CSV output, add to a temp PSQL db, cleanse, then add to permanent db ####
-    ####                                                                           #####
+    ####                                                                           ####
     
     DATABASE_URL = "postgres://xguiubukgruviq:448ab5a6ed85b3b88afa07f95f7a04ff50720b937b710e08a0b033651eb5e6e0@ec2-23-23-234-118.compute-1.amazonaws.com:5432/d7dl5h42bu8d38"
     
