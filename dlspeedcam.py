@@ -6,7 +6,7 @@
 import tabula
 import urllib
 import os
-import datetime
+from datetime import datetime
 import csv
 import psycopg2
 import sys
@@ -37,36 +37,35 @@ def main():
     urllib.urlretrieve(pdfurl, 'speedcamDL.pdf')
     
     #check if pdf downloaded by checking file size
-    filesize = os.path.getsize('speedcamDL.pdf')
+    filesize = os.path.getsize(os.path.join(os.path.curdir, 'speedcamDL.pdf'))
     print filesize
 
     #if pdf was downloaded correctly then convert info to csv
-    if (filesize > 30000):
-        tabula.convert_into('speedcamDL.pdf',
-                                "speedcam.csv",
-                                pages="all",
-                                output_format="csv")
-    else:
-        print ('404 error')
-        sys.exit
+#    if (filesize > 30000):
+#        tabula.convert_into(os.path.join(os.path.curdir, 'speedcamDL.pdf'),
+#                                "speedcam.csv",
+#                                pages="all",
+#                                output_format="csv")
+#    else:
+#        print ('404 error')
+#        sys.exit
     
-    #### Take CSV output, add to a temp PSQL db, cleanse, then add to permanent db ####
-    ####                                                                           ####
+    #### Add CSV output to temp PSQL db, cleanse, then add to permanent db ####
+                                                                         
+    #DATABASE_URL = "postgres://xguiubukgruviq:448ab5a6ed85b3b88afa07f95f7a04ff50720b937b710e08a0b033651eb5e6e0@ec2-23-23-234-118.compute-1.amazonaws.com:5432/d7dl5h42bu8d38"
     
-    DATABASE_URL = "postgres://xguiubukgruviq:448ab5a6ed85b3b88afa07f95f7a04ff50720b937b710e08a0b033651eb5e6e0@ec2-23-23-234-118.compute-1.amazonaws.com:5432/d7dl5h42bu8d38"
-    
-    urlparse.uses_netloc.append("postgres")
-    dburl = urlparse.urlparse(os.environ[DATABASE_URL])
+    #urlparse.uses_netloc.append("postgres")
+    #dburl = urlparse.urlparse(os.environ[DATABASE_URL])
     
     try:
-        # conn = psycopg2.connect("dbname=speedcams user=ubuntu host=localhost password=Kypw123!")
-        conn = psycopg2.connect(
-            database=dburl.path[1:],
-            user=dburl.username,
-            password=dburl.password,
-            host=dburl.hostname,
-            port=dburl.port
-        )
+        conn = psycopg2.connect("dbname=speedcams user=ubuntu host=localhost password=Kypw123!")
+        #conn = psycopg2.connect(
+        #    database=dburl.path[1:],
+        #    user=dburl.username,
+        #    password=dburl.password,
+        #    host=dburl.hostname,
+        #    port=dburl.port
+        #)
         
     except:
         print('Cannot connect to db')
@@ -74,17 +73,19 @@ def main():
     
     cur = conn.cursor()
     
-    # check if this pdf is new
+    # obtain date of the most recent pdf inserted into the database
     cur.execute("SELECT got_date FROM speedcamraw LIMIT 1;")
     existing_date = cur.fetchall()
     print existing_date
     
-    # csvfile = '/home/ubuntu/workspace/speedcam/KY.csv'
-    csvfile = "/tmp/speedcam.csv"
+    # obtain date of the pdf just downloaded
+    csvfile = os.path.join(os.path.curdir, 'speedcam.csv')
     with open (csvfile, 'rb') as csvfile:
         rows = list(csv.reader(csvfile, delimiter=','))
-        new_date = rows[0][0]
-        datetime.datetime.strptime(new_date, '%Y-%m-%d')
+        new_date = (rows[0][0]).split(' ')
+        new_date = new_date[3] +' '+ new_date[2] + ' '+ new_date[1]
+        new_date = datetime.strptime(new_date, '%Y %B %d').date()
+        print new_date
     
     if (new_date == existing_date):
         sys.exit()
@@ -98,13 +99,13 @@ def main():
                     # create an autoincrementing primary key (id) - http://stackoverflow.com/questions/2944499/how-to-add-an-auto-incrementing-primary-key-to-an-existing-table-in-postgresql
                     "ALTER TABLE speedcamraw ADD id SERIAL PRIMARY KEY;")
         
+        
         # check if suburb and street_name2 are empty, if so pull the PDF text date
-        # http://stackoverflow.com/questions/23766084/best-way-to-check-for-empty-or-null-value
         cur.execute('''SELECT street_name, id FROM speedcamraw 
-                    WHERE (((suburb IS NOT NULL) 
-                    AND ((street_name2 IS NOT NULL));''')
-                    
+                    WHERE ((suburb IS NULL)
+                    AND (street_name2 IS NULL));''')
         datesfrompdf = cur.fetchall()
+        
         for rowdate, rowid in datesfrompdf:
             # delete all 'street name' header rows (ie. date header rows + 1)
             cur.execute("DELETE FROM speedcamraw WHERE id = %s;", (rowid + 1,))
@@ -120,6 +121,7 @@ def main():
                     ((suburb IS NULL) AND (street_name2 IS NULL)
                     AND (suburb2 IS NULL) AND (got_date IS NULL));''')
         
+        
         # Copy date, streetname2 and suburb2
         cur.execute('''INSERT INTO speedcamraw (got_date, suburb, street_name)
                      SELECT got_date, suburb2, street_name2 FROM speedcamraw;''')
@@ -127,7 +129,8 @@ def main():
         # Clean up any blank rows
         cur.execute('''DELETE FROM speedcamraw WHERE
                     ((suburb IS NULL) AND (street_name IS NULL));''')
-                     
+        
+                    
         # Copy date, street_name and suburb into speedcamclean
         cur.execute('''INSERT INTO speedcamclean (date, suburb, street_name)
                     SELECT got_date, street_name, suburb FROM speedcamraw;''')
@@ -137,7 +140,5 @@ def main():
     cur.close()
     conn.close()
     
-    
-        
 if __name__ == "__main__":
     main()
