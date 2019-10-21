@@ -4,7 +4,7 @@ MarkupSafe==1.0
 Pillow==2.3.0
 PyPDF2==1.26.0
 SecretStorage==2.0.0
-Werkzeug==0.12.2
+Werkzeug==0.15.3
 argparse==1.2.1
 click==6.7
 colorama==0.2.5
